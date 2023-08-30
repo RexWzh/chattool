@@ -35,7 +35,17 @@ class Chat():
             raise ValueError("msg should be a list of dict, a string or None")
         self._api_key = openai_api_call.api_key if api_key is None else api_key
         self._chat_url = chat_url
+        self._model = 'gpt-3.5-turbo'
     
+    @property
+    def model(self):
+        return self._model
+    
+    @model.setter
+    def model(self, model:str):
+        assert model.startswith('gpt-'), f'unsupported model {model}'
+        self._model = model
+
     @property
     def api_key(self):
         """Get API key"""
@@ -66,7 +76,7 @@ class Chat():
                    , timeout:int = 0
                    , timeinterval:int = 0
                    , api_key:Union[str, None]=None
-                   , model:str = "gpt-3.5-turbo"
+                   , model:str = None
                    , update:bool = True
                    , **options)->Resp:
         """Get the API response
@@ -85,6 +95,8 @@ class Chat():
         if api_key is None:
             api_key = self.api_key
         assert api_key is not None, "API key is not set!"
+        if model is None:
+            model = self.model
 
         # initialize prompt message
         msg = self.chat_log
