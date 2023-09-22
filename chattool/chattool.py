@@ -14,7 +14,9 @@ class Chat():
                 , api_key:Union[None, str]=None
                 , chat_url:Union[None, str]=None
                 , base_url:Union[None, str]=None
-                , model:Union[None, str]=None):
+                , model:Union[None, str]=None
+                , functions:Union[None, List[Dict]]=None
+                , function_call:Union[None, str]=None):
         """Initialize the chat log
 
         Args:
@@ -23,6 +25,8 @@ class Chat():
             chat_url (Union[None, str], optional): base url. Defaults to None. Example: "https://api.openai.com/v1/chat/completions"
             base_url (Union[None, str], optional): base url. Defaults to None. Example: "https://api.openai.com"
             model (Union[None, str], optional): model to use. Defaults to None.
+            functions (Union[None, List[Dict]], optional): functions to use, each function is a JSON Schema. Defaults to None.
+            function_call (str, optional): method to call the function. Defaults to None. Choices: ['auto', '$NameOfTheFunction', 'none']
         
         Raises:
             ValueError: msg should be a list of dict, a string or None
@@ -43,6 +47,10 @@ class Chat():
         self._chat_url = chat_url if chat_url is not None else\
               self._base_url.rstrip('/') + '/v1/chat/completions'
         self._model = 'gpt-3.5-turbo' if model is None else model
+        if functions is not None:
+            assert isinstance(functions, list), "functions should be a list of dict"
+        self._functions = functions
+        self._function_call = function_call
         self._resp = None
     
     def prompt_token(self, model:str="gpt-3.5-turbo-0613"):
@@ -80,6 +88,16 @@ class Chat():
         """Get base url"""
         return self._base_url
     
+    @property
+    def functions(self):
+        """Get functions"""
+        return self._functions
+    
+    @property
+    def function_call(self):
+        """Get function call"""
+        return self._function_call
+    
     @api_key.setter
     def api_key(self, api_key:str):
         """Set API key"""
@@ -94,6 +112,17 @@ class Chat():
     def base_url(self, base_url:str):
         """Set base url"""
         self._base_url = base_url
+
+    @functions.setter
+    def functions(self, functions:List[Dict]):
+        """Set functions"""
+        assert isinstance(functions, list), "functions should be a list of dict"
+        self._functions = functions
+    
+    @function_call.setter
+    def function_call(self, function_call:str):
+        """Set function call"""
+        self._function_call = function_call
 
     @property
     def chat_log(self):
@@ -121,6 +150,7 @@ class Chat():
         """
         # initialize data
         api_key, model = self.api_key, self.model
+        funcs, func_call = self.functions, self.function_call
         assert api_key is not None, "API key is not set!"
         if not len(options):options = {}
         msg, resp, numoftries = self.chat_log, None, 0
@@ -130,6 +160,8 @@ class Chat():
         while max_requests:
             try:
                 # Make the API call
+                if funcs is not None: options['functions'] = funcs
+                if func_call is not None: options['function_call'] = func_call
                 response = chat_completion(
                     api_key=api_key, messages=msg, model=model,
                     chat_url=self.chat_url, timeout=timeout, **options)
@@ -225,14 +257,17 @@ class Chat():
         """Copy the chat log"""
         return Chat(self._chat_log, api_key=self.api_key, chat_url=self.chat_url, model=self.model)
     
+    @property
     def last_message(self):
         """Get the last message"""
         return self._chat_log[-1]['content']
 
+    @property
     def latest_response(self):
         """Get the latest response"""
         return self._resp
     
+    @property
     def latest_cost(self):
         """Get the latest cost"""
         return self._resp.cost() if self._resp is not None else None
