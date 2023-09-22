@@ -1,6 +1,6 @@
 # test for chattool
 
-## Urls
+## Other Urls
 
 Referenced from https://gitee.com/lzhpo/chatgpt-spring-boot-starter.
 

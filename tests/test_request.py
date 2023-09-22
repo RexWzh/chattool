@@ -1,5 +1,8 @@
 from chattool import debug_log, Resp
-from chattool.request import normalize_url, is_valid_url, valid_models
+from chattool.request import (
+    normalize_url, is_valid_url, valid_models,
+    upload_file
+)
 import chattool
 api_key = chattool.api_key
 

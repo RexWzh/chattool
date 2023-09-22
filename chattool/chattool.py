@@ -13,6 +13,7 @@ class Chat():
                 , msg:Union[List[Dict], None, str]=None
                 , api_key:Union[None, str]=None
                 , chat_url:Union[None, str]=None
+                , base_url:Union[None, str]=None
                 , model:Union[None, str]=None):
         """Initialize the chat log
 
@@ -20,6 +21,7 @@ class Chat():
             msg (Union[List[Dict], None, str], optional): chat log. Defaults to None.
             api_key (Union[None, str], optional): API key. Defaults to None.
             chat_url (Union[None, str], optional): base url. Defaults to None. Example: "https://api.openai.com/v1/chat/completions"
+            base_url (Union[None, str], optional): base url. Defaults to None. Example: "https://api.openai.com"
             model (Union[None, str], optional): model to use. Defaults to None.
         
         Raises:
@@ -37,8 +39,9 @@ class Chat():
         else:
             raise ValueError("msg should be a list of dict, a string or None")
         self._api_key = chattool.api_key if api_key is None else api_key
+        self.base_url = chattool.base_url if base_url is None else base_url
         self._chat_url = chat_url if chat_url is not None else\
-              chattool.base_url.rstrip('/') + '/v1/chat/completions'
+              base_url.rstrip('/') + '/v1/chat/completions'
         self._model = 'gpt-3.5-turbo' if model is None else model
         self._resp = None
     
@@ -174,7 +177,7 @@ class Chat():
         Returns:
             List[str]: valid models
         """
-        return valid_models(self.api_key, gpt_only=gpt_only)
+        return valid_models(self.api_key, self.base_url, gpt_only=gpt_only)
 
     def add(self, role:str, msg:str):
         """Add a message to the chat log"""
